@@ -1210,7 +1210,7 @@ fi;
 ##  defined above by looking up the symbol table.
 ##
 BindGlobal("OMsymLookup", function( symbol )
-local cd, name;
+local cd, name, p;
 cd := symbol[1];
 name := symbol[2];
 if IsBound( OMsymRecord.(cd) ) then
@@ -1229,8 +1229,19 @@ if IsBound( OMsymRecord.(cd) ) then
 	Error("OpenMathError: ", "unexpected_symbol", " cd=", symbol[1], " name=", symbol[2]);
   fi;
 else
-  # we didn't even find the cd
-  Error("OpenMathError: ", "unsupported_CD", " cd=", symbol[1], " name=", symbol[2]);
+  # HACK HACK HACK
+  # MitM constructors are just functions to be evaluated. This
+  # is what we do here.
+  if cd in [ "grp", "trans" ] then
+    if IsBoundGlobal(name) then
+       return function(x) return CALL_FUNC_LIST(ValueGlobal(name), x); end;
+    else
+       Error("OpenMathError: ", "tried to call undefined function");
+    fi;
+  else
+    # we didn't even find the cd
+    Error("OpenMathError: ", "unsupported_CD", " cd=", symbol[1], " name=", symbol[2]);
+  fi;
 fi;  	
 end);
  
